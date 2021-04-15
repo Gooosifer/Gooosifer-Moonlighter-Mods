@@ -26,7 +26,7 @@ namespace WeaponEvery30Sec
 		/// <param name="__this"></param>
 		/// <param name="slot"></param>
 		/// <returns></returns>
-		public static ItemStack GetCurrentEquippedWeapon(this HeroMerchantInventory __this, int slot = 1)
+		public static ItemStack GetCurrentlyEquippedWeapon(this HeroMerchantInventory __this, int slot = 1)
         {
 			switch (slot)
             {
