@@ -38,6 +38,22 @@ namespace WeaponEvery30Sec
 				default:
 					return null;
 			}
-        }
+
+			string[] delim = { "(", ")" };
+
+			string text = HeroMerchant.Instance.heroMerchantController.currentEquippedWeapon.ToString();
+			System.Console.WriteLine($"Original text: '{text}'");
+
+			string[] words = text.Split(delim, System.StringSplitOptions.RemoveEmptyEntries);
+			System.Console.WriteLine($"{words.Length} substrings in text:");
+
+			foreach (var word in words)
+			{
+				System.Console.WriteLine(word);
+			}
+
+			
+
+		}
 	}
 }

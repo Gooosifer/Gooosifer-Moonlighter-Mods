@@ -5,6 +5,7 @@ using System;
 using System.Reflection;
 using Random = UnityEngine.Random;
 using System.Collections.Generic;
+using UnityEngine;
 
 
 namespace WeaponEvery30Sec
@@ -16,10 +17,8 @@ namespace WeaponEvery30Sec
         internal static Assembly modAssembly = Assembly.GetExecutingAssembly();
         internal static string modName = $"{modAssembly.GetName().Name}";
         internal static string modDir = $"{Environment.CurrentDirectory}\\BepInEx\\plugins\\{modName}";
+        public float timeRemaining = 10;
         internal static bool hasLoaded = false;
-        internal static int index;
-        internal static int counter = 0;
-        internal static ItemMaster itemName = null;
 
         void Awake()
         {
@@ -28,47 +27,67 @@ namespace WeaponEvery30Sec
             Logger.LogInfo($"{modName} has loaded");
             int seed = 1234;
             Random.InitState(seed);
-
-            var rand = new Random();
+            
         }
 
         void Update()
-        {          
-            if ((GameManager.Instance.IsTownSceneLoaded()) && (hasLoaded == false))
+        {
+
+            // Saves the current equipped weapon
+            //ItemStack currentlyEquipped = HeroMerchant.Instance.heroMerchantInventory.GetCurrentlyEquippedWeapon();
+            
+            int index;
+            if (GameManager.Instance.IsWillInDungeon())
             {
                 // Instance of hero merchant inventory
                 HeroMerchantInventory __heroInstance = HeroMerchant.Instance.heroMerchantInventory;
+                hasLoaded = true;
 
-                List<ItemMaster> itemMasters = new List<ItemMaster>();
+                if (timeRemaining <= 0)
+                {                   
+                    List<ItemMaster> itemMasters = new List<ItemMaster>();
 
-                // Grabs the index of the weapon from WeaponEquipmentMaster
-                itemMasters = ItemDatabase.GetItems().FindAll(item => item is WeaponEquipmentMaster);
-                index = Random.Range(0, itemMasters.Count);
+                    // Grabs the index of the weapon from WeaponEquipmentMaster
+                    itemMasters = ItemDatabase.GetItems().FindAll(item => item is WeaponEquipmentMaster);
+                    index = Random.Range(0, itemMasters.Count);
 
-                // Assign random weapon itemName variable
-                foreach (var weapon_ in itemMasters)
-                {
-                    if (counter == index)
+                    ItemMaster itemName = null;
+                    int counter = 0;
+
+                    // Assign random weapon to itemName variable
+                    foreach (var weapon_ in itemMasters)
                     {
-                        itemName = weapon_;
+                        if (counter == index)
+                        {
+                            itemName = weapon_;
+                        }
+                        counter++;
                     }
-                    counter++;
+
+                    // Creates an instance of the weapon
+                    ItemStack weapon = ItemStack.Create(itemName);
+
+                    // Replaces current weapon with new one
+                    __heroInstance.OnlySetWeapon(weapon);
+                    instance.Logger.LogMessage(HeroMerchant.Instance.heroMerchantController.currentEquippedWeapon.ToString());
+                    instance.Logger.LogMessage(__heroInstance.GetCurrentlyEquippedWeapon().ToString());
+
+                    timeRemaining = 10;
+                    counter = 0;
                 }
+                timeRemaining -= Time.deltaTime;
+            }
 
-                // Creates an instance of the weapon
-                ItemStack weapon = ItemStack.Create(itemName);
-
-                // Saves the current equipped weapon
-                ItemStack currentlyEquipped = __heroInstance.GetCurrentlyEquippedWeapon();
-                instance.Logger.LogMessage(currentlyEquipped.ToString());
-
-                // Replaces current weapon with new one
-                __heroInstance.OnlySetWeapon(weapon);
-                //instance.Logger.LogMessage(HeroMerchant.Instance.heroMerchantController.currentEquippedWeapon.ToString());
-                instance.Logger.LogMessage(__heroInstance.GetCurrentlyEquippedWeapon().ToString());
-
+            if ((GameManager.Instance.IsTownSceneLoaded() == true) && (hasLoaded == false))
+            {
+                // Instance of hero merchant inventory
+                HeroMerchantInventory __heroInstance = HeroMerchant.Instance.heroMerchantInventory;
+                // Restores current weapon
+                //__heroInstance.OnlySetWeapon(currentlyEquipped);
+                //instance.Logger.LogMessage(currentlyEquipped.ToString());
                 hasLoaded = true;
             }
+            
         }
 
         internal static void LogMessage(string message)
