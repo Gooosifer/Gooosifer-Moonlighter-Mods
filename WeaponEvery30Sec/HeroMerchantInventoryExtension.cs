@@ -26,9 +26,9 @@ namespace WeaponEvery30Sec
 		/// <param name="__this"></param>
 		/// <param name="slot"></param>
 		/// <returns></returns>
-		public static ItemStack GetCurrentlyEquippedWeapon(this HeroMerchantInventory __this, int slot = 1)
+		public static ItemStack GetCurrentlyEquippedWeapon(this HeroMerchantInventory __this, string weaponName, int slot = 1)
         {
-			switch (slot)
+			/*switch (slot)
             {
 				case 1:
 					return HeroMerchant.Instance.heroMerchantInventory.GetEquippedItemByType(HeroMerchantInventory.EquipmentSlot.Weapon1);
@@ -37,21 +37,25 @@ namespace WeaponEvery30Sec
 					return HeroMerchant.Instance.heroMerchantInventory.GetEquippedItemByType(HeroMerchantInventory.EquipmentSlot.Weapon2);
 				default:
 					return null;
-			}
+			}*/
 
 			string[] delim = { "(", ")" };
 
-			string text = HeroMerchant.Instance.heroMerchantController.currentEquippedWeapon.ToString();
-			System.Console.WriteLine($"Original text: '{text}'");
+			//string weaponString = HeroMerchant.Instance.heroMerchantController.currentEquippedWeapon.ToString();
 
-			string[] words = text.Split(delim, System.StringSplitOptions.RemoveEmptyEntries);
-			System.Console.WriteLine($"{words.Length} substrings in text:");
+			string[] words = weaponName.Split(delim, System.StringSplitOptions.RemoveEmptyEntries);
 
-			foreach (var word in words)
-			{
-				System.Console.WriteLine(word);
+			ItemMaster weapon = ItemDatabase.GetItemByName(words[1]);
+			// Creates an instance of the weapon
+			ItemStack backup = ItemStack.Create(weapon);
+			if (backup != null)
+            {
+				return backup;
 			}
-
+			else
+            {
+				return null;
+            }
 			
 
 		}

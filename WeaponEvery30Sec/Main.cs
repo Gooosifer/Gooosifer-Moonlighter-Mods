@@ -4,7 +4,6 @@ using HarmonyLib;
 using System;
 using System.Reflection;
 using Random = UnityEngine.Random;
-using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -17,8 +16,13 @@ namespace WeaponEvery30Sec
         internal static Assembly modAssembly = Assembly.GetExecutingAssembly();
         internal static string modName = $"{modAssembly.GetName().Name}";
         internal static string modDir = $"{Environment.CurrentDirectory}\\BepInEx\\plugins\\{modName}";
-        public float timeRemaining = 10;
-        internal static bool hasLoaded = false;
+        internal static bool comingBackFromDungeon = false;
+        internal static bool justEnteredDungeon = true;
+        internal static bool heroInstanceLoaded = false;
+        static float timeRemaining = 10;
+        internal static HeroMerchantInventory __heroInstance;
+        internal static string weaponStringBackup;
+        internal static string weaponString;
 
         void Awake()
         {
@@ -32,63 +36,62 @@ namespace WeaponEvery30Sec
 
         void Update()
         {
-
-            // Saves the current equipped weapon
-            //ItemStack currentlyEquipped = HeroMerchant.Instance.heroMerchantInventory.GetCurrentlyEquippedWeapon();
-            
-            int index;
-            if (GameManager.Instance.IsWillInDungeon())
+            __heroInstance = HeroMerchant.Instance.heroMerchantInventory;          
+            if (timeRemaining <= 0)
             {
-                // Instance of hero merchant inventory
-                HeroMerchantInventory __heroInstance = HeroMerchant.Instance.heroMerchantInventory;
-                hasLoaded = true;
-
-                if (timeRemaining <= 0)
-                {                   
-                    List<ItemMaster> itemMasters = new List<ItemMaster>();
-
-                    // Grabs the index of the weapon from WeaponEquipmentMaster
-                    itemMasters = ItemDatabase.GetItems().FindAll(item => item is WeaponEquipmentMaster);
-                    index = Random.Range(0, itemMasters.Count);
-
-                    ItemMaster itemName = null;
-                    int counter = 0;
-
-                    // Assign random weapon to itemName variable
-                    foreach (var weapon_ in itemMasters)
+                if (GameManager.Instance.IsWillInDungeon())
+                {
+                    if (justEnteredDungeon == true)
                     {
-                        if (counter == index)
-                        {
-                            itemName = weapon_;
-                        }
-                        counter++;
+                        weaponStringBackup = HeroMerchant.Instance.heroMerchantController.currentEquippedWeapon.ToString();
+                        justEnteredDungeon = false;
                     }
-
-                    // Creates an instance of the weapon
-                    ItemStack weapon = ItemStack.Create(itemName);
-
-                    // Replaces current weapon with new one
-                    __heroInstance.OnlySetWeapon(weapon);
-                    instance.Logger.LogMessage(HeroMerchant.Instance.heroMerchantController.currentEquippedWeapon.ToString());
-                    instance.Logger.LogMessage(__heroInstance.GetCurrentlyEquippedWeapon().ToString());
-
-                    timeRemaining = 10;
-                    counter = 0;
+                    HeroMerchant.Instance.heroMerchantController.randomWeaponsEveryNSeconds(__heroInstance);
+                    weaponString = HeroMerchant.Instance.heroMerchantController.currentEquippedWeapon.ToString();
+                    comingBackFromDungeon = true;
                 }
-                timeRemaining -= Time.deltaTime;
+                else if (GameManager.Instance.IsWillInTown())
+                {                   
+                    if ((!weaponString.Equals(weaponStringBackup)) && (comingBackFromDungeon == true))
+                    {
+                        ItemStack currentlyEquipped = __heroInstance.GetCurrentlyEquippedWeapon(weaponStringBackup);
+                        // Restores current weapon
+                        if (currentlyEquipped != null)
+                        {
+                            __heroInstance.OnlySetWeapon(currentlyEquipped);
+                        }
+                        instance.Logger.LogMessage(currentlyEquipped.ToString());
+                        comingBackFromDungeon = false;
+                        justEnteredDungeon = true;
+                    }
+                }
+                timeRemaining = 10;
+                
             }
+            timeRemaining -= Time.deltaTime;
+            /*    if (GameManager.Instance.IsDungeonSceneLoaded())
+                {
+                    if (GameManager.Instance.IsWillInDungeon())
+                    {
+                        hasLoaded = false;
+                    }
+                }*/
 
-            if ((GameManager.Instance.IsTownSceneLoaded() == true) && (hasLoaded == false))
+            /*if ((GameManager.Instance.IsTownSceneLoaded() == true) && (hasLoaded == false))
             {
                 // Instance of hero merchant inventory
-                HeroMerchantInventory __heroInstance = HeroMerchant.Instance.heroMerchantInventory;
+                //__heroInstance = HeroMerchant.Instance.heroMerchantInventory;
                 // Restores current weapon
-                //__heroInstance.OnlySetWeapon(currentlyEquipped);
+                if (currentlyEquipped != null)
+                {
+                    __heroInstance.OnlySetWeapon(currentlyEquipped);
+                }
                 //instance.Logger.LogMessage(currentlyEquipped.ToString());
                 hasLoaded = true;
-            }
-            
+            }*/
+
         }
+
 
         internal static void LogMessage(string message)
         {

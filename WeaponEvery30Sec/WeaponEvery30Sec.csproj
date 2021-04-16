@@ -59,6 +59,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HeroMerchantControllerExtension.cs" />
+    <Compile Include="GameManagerExtension.cs" />
     <Compile Include="HeroMerchantInventoryExtension.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Patches\MainMenuPanel_Awake.cs" />
